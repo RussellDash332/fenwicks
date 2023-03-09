@@ -117,7 +117,7 @@ def weight_decay_loss(wd: float = 0.0005) -> tf.Tensor:
 
 def get_tpu_estimator(steps_per_epoch: int, model_func, work_dir: str, ws_dir: str = None, ws_vars: List[str] = None,
                       trn_bs: int = 128, val_bs: int = 1, pred_bs: int = 1, use_tpu: bool = True,
-                      use_time_in_work_dir: bool = True) -> tf.contrib.tpu.TPUEstimator:
+                      use_time_in_work_dir: bool = True) -> tf.compat.v1.estimator.tpu.TPUEstimator:
     """
     Create a TPUEstimator object ready for training and evaluation.
 
@@ -135,23 +135,23 @@ def get_tpu_estimator(steps_per_epoch: int, model_func, work_dir: str, ws_dir: s
     """
 
     use_tpu = use_tpu and (TPU_ADDRESS is not None)
-    cluster = tf.contrib.cluster_resolver.TPUClusterResolver(TPU_ADDRESS) if use_tpu else None
+    cluster = tf.distribute.cluster_resolver.TPUClusterResolver(TPU_ADDRESS) if use_tpu else None
 
-    tpu_cfg = tf.contrib.tpu.TPUConfig(
+    tpu_cfg = tf.compat.v1.estimator.tpu.TPUConfig(
         iterations_per_loop=steps_per_epoch,
-        per_host_input_for_training=tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2)
+        per_host_input_for_training=tf.compat.v1.estimator.tpu.InputPipelineConfig.PER_HOST_V2)
 
     if use_time_in_work_dir:
         now = datetime.datetime.now()
         time_str = f'{now.year}-{now.month:02d}-{now.day:02d}-{now.hour:02d}:{now.minute:02d}:{now.second:02d}'
         work_dir = os.path.join(work_dir, time_str)
 
-    trn_cfg = tf.contrib.tpu.RunConfig(cluster=cluster, model_dir=work_dir, tpu_config=tpu_cfg)
+    trn_cfg = tf.compat.v1.estimator.tpu.RunConfig(cluster=cluster, model_dir=work_dir, tpu_config=tpu_cfg)
 
     ws = None if ws_dir is None else tf.estimator.WarmStartSettings(ckpt_to_initialize_from=ws_dir,
                                                                     vars_to_warm_start=ws_vars)
 
-    return tf.contrib.tpu.TPUEstimator(use_tpu=use_tpu, model_fn=model_func, model_dir=work_dir,
+    return tf.compat.v1.estimator.tpu.TPUEstimator(use_tpu=use_tpu, model_fn=model_func, model_dir=work_dir,
                                        train_batch_size=trn_bs, eval_batch_size=val_bs, predict_batch_size=pred_bs,
                                        config=trn_cfg, warm_start_from=ws)
 
@@ -193,7 +193,7 @@ def get_clf_model_func(model_arch: Callable, opt_func: Callable, reduction: str 
 
             opt = opt_func()
             if use_tpu:
-                opt = tf.contrib.tpu.CrossShardOptimizer(opt, reduction=reduction)
+                opt = tf.compat.v1.tpu.CrossShardOptimizer(opt, reduction=reduction)
 
             var = model.trainable_variables  # this excludes frozen variables
             grads_and_vars = opt.compute_gradients(loss, var_list=var)
@@ -216,7 +216,7 @@ def get_clf_model_func(model_arch: Callable, opt_func: Callable, reduction: str 
             else:
                 tf.train.init_from_checkpoint(init_ckpt, assignment_map)
 
-        return tf.contrib.tpu.TPUEstimatorSpec(mode=mode, loss=loss, predictions={"y_pred": y_pred},
+        return tf.compat.v1.estimator.tpu.TPUEstimatorSpec(mode=mode, loss=loss, predictions={"y_pred": y_pred},
                                                train_op=train_op, scaffold_fn=scaffold_func, eval_metrics=tpu_metrics)
 
     return model_func

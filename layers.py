@@ -218,9 +218,8 @@ def attention(src: tf.Tensor, dest: tf.Tensor, mask: tf.Tensor = None, n_heads: 
     return tf.reshape(context, ret_shape)
 
 
-# todo: tf 2.0
 def layer_norm(input_tensor, name=None):
-    return tf.contrib.layers.layer_norm(
+    return slim.layers.layer_norm(
         inputs=input_tensor, begin_norm_axis=-1, begin_params_axis=-1, scope=name)
 
 

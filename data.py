@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from . import io
 
-from tensorflow.contrib.tpu.python.tpu import datasets as tpu_datasets
+from tensorflow.python.tpu import datasets as tpu_datasets
 
 
 def float_tffeature(value) -> tf.train.Feature:
@@ -412,7 +412,7 @@ def tfrecord_ds(file_pattern: str, parser, batch_size: int, training: bool = Tru
         dataset = dataset.repeat()
 
     dataset = dataset.apply(mapper_batcher)
-    dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 
@@ -441,5 +441,5 @@ def numpy_ds(xs: Union[np.ndarray, List], ys: Union[np.ndarray, List], batch_siz
         dataset = dataset.repeat()
 
     dataset = dataset.batch(batch_size, drop_remainder=True)
-    dataset = dataset.prefetch(tf.contrib.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
