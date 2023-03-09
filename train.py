@@ -156,7 +156,7 @@ def get_tpu_estimator(steps_per_epoch: int, model_func, work_dir: str, ws_dir: s
                                        config=trn_cfg, warm_start_from=ws)
 
 
-def get_clf_model_func(model_arch: Callable, opt_func: Callable, reduction: str = tf.losses.Reduction.MEAN,
+def get_clf_model_func(model_arch: Callable, opt_func: Callable, reduction: str = tf.losses.Reduction.SUM,
                        use_tpu: bool = True, init_ckpt: str = None) -> Callable:
     """
     Build a model function for a classification task to be used in a TPUEstimator, based on a given model architecture
@@ -166,8 +166,8 @@ def get_clf_model_func(model_arch: Callable, opt_func: Callable, reduction: str 
 
     :param model_arch: Model architecture: a callable that builds a neural net model.
     :param opt_func: Optimization function: a callable that returns an optimizer.
-    :param reduction: Whether to average (`tf.losses.Reduction.MEAN`) or sum (`tf.losses.Reduction.SUM`) losses
-                      for different training records. Default: average.
+    :param reduction: Whether to sum (`tf.losses.Reduction.SUM`) losses
+                      for different training records. Default: sum.
     :param use_tpu: Whether to use TPU. Default: True.
     :param init_ckpt: Path to a pre-trained checkpoint. Default: None.
     :return: Model function ready for TPUEstimator.
